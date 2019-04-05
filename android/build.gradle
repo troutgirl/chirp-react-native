@@ -28,6 +28,10 @@ allprojects {
             url 'https://maven.google.com/'
             name 'Google'
         }
+        maven {
+            // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
+            url "https://maven.chirp.io/release"
+        }
     }
 }
 
