@@ -148,15 +148,12 @@ public class RCTChirpConnectModule extends ReactContextBaseJavaModule implements
      * Configure the SDK with a config string.
      */
     @ReactMethod
-    public void setConfig(String config, final Promise promise) {
+    public void setConfig(String config) {
 
-        ChirpError setConfigError = chirpConnect.setConfig(config);
-        if (setConfigError.getCode() > 0) {
-            promise.reject("SetConfig Error", setConfigError.getMessage());
-        } else {
-            promise.resolve("Initialisation Success");
+        ChirpError error = chirpConnect.setConfig(config);
+        if (error.getCode() > 0) {
+            onError(context, error.getMessage());
         }
-
     }
 
     /**
