@@ -1,4 +1,4 @@
-# Chirp Connect React Native Starter Project
+# Chirp React Native Starter Project
 
 This starter project isn't completely off the shelf, you will need to sign up to the [Chirp Developer Hub](https://developers.chirp.io/sign-up),
 and copy your Chirp app key and secret into `App.js`.
