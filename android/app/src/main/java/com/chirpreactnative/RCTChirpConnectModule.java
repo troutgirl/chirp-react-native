@@ -36,12 +36,11 @@ import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
-import chirpconnect.Chirpconnect;
 import io.chirp.connect.ChirpConnect;
 import io.chirp.connect.interfaces.ConnectEventListener;
 import io.chirp.connect.interfaces.ConnectSetConfigListener;
 import io.chirp.connect.models.ChirpError;
-import io.chirp.connect.models.ConnectState;
+import io.chirp.connect.models.ChirpConnectState;
 
 
 public class RCTChirpConnectModule extends ReactContextBaseJavaModule implements LifecycleEventListener {
@@ -65,12 +64,12 @@ public class RCTChirpConnectModule extends ReactContextBaseJavaModule implements
     @Override
     public Map<String, Object> getConstants() {
         final Map<String, Object> constants = new HashMap<>();
-        constants.put("CHIRP_CONNECT_NOT_CREATED", ConnectState.ConnectNotCreated.ordinal());
-        constants.put("CHIRP_CONNECT_STATE_STOPPED", ConnectState.AudioStateStopped.ordinal());
-        constants.put("CHIRP_CONNECT_STATE_PAUSED", ConnectState.AudioStatePaused.ordinal());
-        constants.put("CHIRP_CONNECT_STATE_RUNNING", ConnectState.AudioStateRunning.ordinal());
-        constants.put("CHIRP_CONNECT_STATE_SENDING", ConnectState.AudioStateSending.ordinal());
-        constants.put("CHIRP_CONNECT_STATE_RECEIVING", ConnectState.AudioStateReceiving.ordinal());
+        constants.put("CHIRP_CONNECT_NOT_CREATED", ChirpConnectState.CHIRP_CONNECT_STATE_NOT_CREATED.getCode());
+        constants.put("CHIRP_CONNECT_STATE_STOPPED", ChirpConnectState.CHIRP_CONNECT_STATE_STOPPED.getCode());
+        constants.put("CHIRP_CONNECT_STATE_PAUSED", ChirpConnectState.CHIRP_CONNECT_STATE_PAUSED.getCode());
+        constants.put("CHIRP_CONNECT_STATE_RUNNING", ChirpConnectState.CHIRP_CONNECT_STATE_RUNNING.getCode());
+        constants.put("CHIRP_CONNECT_STATE_SENDING", ChirpConnectState.CHIRP_CONNECT_STATE_SENDING.getCode());
+        constants.put("CHIRP_CONNECT_STATE_RECEIVING", ChirpConnectState.CHIRP_CONNECT_STATE_RECEIVING.getCode());
         return constants;
     }
 
@@ -87,33 +86,33 @@ public class RCTChirpConnectModule extends ReactContextBaseJavaModule implements
         chirpConnect.setListener(new ConnectEventListener() {
 
             @Override
-            public void onSending(byte[] data, byte channel) {
+            public void onSending(byte[] data, int channel) {
                 WritableMap params = assembleData(data);
                 context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit("onSending", params);
             }
 
             @Override
-            public void onSent(byte[] data, byte channel) {
+            public void onSent(byte[] data, int channel) {
                 WritableMap params = assembleData(data);
                 context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit("onSent", params);
             }
 
             @Override
-            public void onReceiving(byte channel) {
+            public void onReceiving(int channel) {
                 WritableMap params = Arguments.createMap();
                 context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit("onReceiving", params);
             }
 
             @Override
-            public void onReceived(byte[] data, byte channel) {
+            public void onReceived(byte[] data, int channel) {
                 WritableMap params = assembleData(data);
                 context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit("onReceived", params);
             }
 
             @Override
-            public void onStateChanged(byte oldState, byte newState) {
+            public void onStateChanged(int oldState, int newState) {
                 WritableMap params = Arguments.createMap();
-                params.putInt("status", ConnectState.createConnectState(newState).ordinal());
+                params.putInt("status", newState);
                 context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit("onStateChanged", params);
             }
 
@@ -149,20 +148,12 @@ public class RCTChirpConnectModule extends ReactContextBaseJavaModule implements
      * Configure the SDK with a config string.
      */
     @ReactMethod
-    public void setConfig(String config, final Promise promise) {
+    public void setConfig(String config) {
 
-        chirpConnect.setConfig(config, new ConnectSetConfigListener() {
-
-            @Override
-            public void onSuccess() {
-                promise.resolve("Initialisation Success");
-            }
-
-            @Override
-            public void onError(ChirpError setConfigError) {
-                promise.reject("SetConfig Error", setConfigError.getMessage());
-            }
-        });
+        ChirpError error = chirpConnect.setConfig(config);
+        if (error.getCode() > 0) {
+            onError(context, error.getMessage());
+        }
     }
 
     /**
@@ -207,7 +198,7 @@ public class RCTChirpConnectModule extends ReactContextBaseJavaModule implements
             payload[i] = (byte)data.getInt(i);
         }
 
-        long maxSize = chirpConnect.getMaxPayloadLength();
+        long maxSize = chirpConnect.maxPayloadLength();
         if (maxSize < payload.length) {
             onError(context, "Invalid payload");
             return;
@@ -225,9 +216,9 @@ public class RCTChirpConnectModule extends ReactContextBaseJavaModule implements
      */
     @ReactMethod
     public void sendRandom() {
-        long maxPayloadLength = chirpConnect.getMaxPayloadLength();
+        long maxPayloadLength = chirpConnect.maxPayloadLength();
         long size = (long) new Random().nextInt((int) maxPayloadLength) + 1;
-        byte[] payload = chirpConnect.randomPayload(size);
+        byte[] payload = chirpConnect.randomPayload((byte)size);
 
         ChirpError error = chirpConnect.send(payload);
         if (error.getCode() > 0) {

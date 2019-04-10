@@ -59,21 +59,19 @@ RCT_EXPORT_METHOD(init:(NSString *)key secret:(NSString *)secret)
   sdk = [[ChirpConnect alloc] initWithAppKey:key
                                    andSecret:secret];
 
-  [sdk setShouldRouteAudioToBluetoothPeripherals:YES];
-
   [sdk setStateUpdatedBlock:^(CHIRP_CONNECT_STATE oldState,
                               CHIRP_CONNECT_STATE newState)
    {
      [self sendEventWithName:@"onStateChanged" body:@{@"status": [NSNumber numberWithInt:newState]}];
    }];
 
-  [sdk setSendingBlock:^(NSData * _Nonnull data)
+  [sdk setSendingBlock:^(NSData * _Nonnull data, NSUInteger channel)
    {
      NSArray *payload = [self dataToArray: data];
      [self sendEventWithName:@"onSending" body:@{@"data": payload}];
    }];
 
-  [sdk setSentBlock:^(NSData * _Nonnull data)
+  [sdk setSentBlock:^(NSData * _Nonnull data, NSUInteger channel)
    {
      NSArray *payload = [self dataToArray: data];
      [self sendEventWithName:@"onSent" body:@{@"data": payload}];
@@ -119,16 +117,11 @@ RCT_EXPORT_METHOD(setConfigFromNetwork:(RCTPromiseResolveBlock)resolve
  *
  * Configure the SDK with a config string.
  */
-RCT_EXPORT_METHOD(setConfig:(NSString *)config
-                  resolver:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(setConfig:(NSString *)config)
 {
   NSError *err = [sdk setConfig:config];
   if (err) {
     [self sendEventWithName:@"onError" body:@{@"message": [err localizedDescription]}];
-    reject(@"Error", @"Configuration Error", err);
-  } else {
-    resolve(@"Configuration set");
   }
 }
 

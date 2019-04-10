@@ -58,3 +58,7 @@ buck-out/
 # Chirp
 ChirpConnect.framework
 chirp-connect-release.aar
+
+# iOS
+Pods/
+*.xcworkspace
