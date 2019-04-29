@@ -33,8 +33,9 @@ import {
 const ChirpConnect = NativeModules.ChirpConnect;
 const ChirpConnectEmitter = new NativeEventEmitter(ChirpConnect);
 
-const key = 'CHIRP_APPLICATION_KEY';
-const secret = 'CHIRP_APPLICATION_SECRET';
+const key = '<YOUR_CHIRP_APP_KEY>';
+const secret = '<YOUR_CHIRP_APP_SECRET>';
+const config = '<YOUR_CHIRP_APP_CONFIG>';
 
 export default class App extends Component<{}> {
 
@@ -85,7 +86,7 @@ export default class App extends Component<{}> {
 
     try {
       ChirpConnect.init(key, secret);
-      await ChirpConnect.setConfigFromNetwork();
+      ChirpConnect.setConfig(config);
       ChirpConnect.start();
       this.setState({ initialised: true })
     } catch(e) {
@@ -107,7 +108,7 @@ export default class App extends Component<{}> {
     return (
       <View style={styles.container}>
         <Text style={styles.welcome}>
-          Welcome to Chirp Connect!
+          Welcome to Chirp!
         </Text>
         <Text style={styles.instructions}>
           {this.state.status}
@@ -115,7 +116,11 @@ export default class App extends Component<{}> {
         <Text style={styles.instructions}>
           {this.state.data}
         </Text>
-      <Button onPress={this.onPress} title='SEND' disabled={!this.state.initialised} />
+        <Button
+          onPress={this.onPress}
+          title='SEND'
+          disabled={!this.state.initialised}
+        />
       </View>
     );
   }
